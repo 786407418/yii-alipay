@@ -53,6 +53,7 @@ class Ali extends Component {
 
     public $h5_pay_public_key_path;
     public $h5_pay_private_key_path;
+    public $h5_pay_notify_url;
 
     /**
      * @var Tools Tools
@@ -63,10 +64,11 @@ class Ali extends Component {
     {
         parent::__construct($config);
         $this->tools = new Tools();
+        $this->common_params["timestamp"] = date("Y-m-d H:i:s",time());
         $this->common_params["app_id"] = $this->app_id;
         $this->common_params["charset"] = $this->charset;
         $this->common_params["sign_type"] = $this->sign_type;
-        $this->common_params["timestamp"] = date("Y-m-d H:i:s",time());
+
     }
 
 
@@ -78,11 +80,11 @@ class Ali extends Component {
      * @param $passback_params  公用回传参数，如果请求时传递了该参数，则返回给商户时会回传该参数。支付宝会在异步通知时将该参数原样返回。本参数必须进行UrlEncode之后才可以发送给支付宝
      * @param string $product_code  销售产品码，商家和支付宝签约的产品码。该产品请填写固定值：QUICK_WAP_WAY
      */
-    public function h5_pay($body,$subject,$out_trade_no,$total_amount,$passback_params,$product_code="QUICK_WAP_WAY"){
+    public function h5_pay($body,$subject,$out_trade_no,$total_amount,$passback_params="",$product_code="QUICK_WAP_WAY"){
 
-//        $this->common_params["notify_url"] = $this->notify_url;
         $this->common_params["method"] = $this->h5_pay_method;
         $this->common_params["version"] = $this->h5_pay_version;
+        $this->common_params["notify_url"] = $this->h5_pay_notify_url;
         $this->practiceParam = [
             "subject"=>$subject,
             "out_trade_no"=>$out_trade_no,
@@ -93,13 +95,14 @@ class Ali extends Component {
         if(trim($body)!=''){
             $this->practiceParam['body']=$body;
         }
-
-        $this->common_params["biz_content"] = json_encode($this->practiceParam);
+        $this->common_params["biz_content"] = json_encode($this->practiceParam,JSON_UNESCAPED_UNICODE);
         $para_filter=$this->tools->paraFilterNew($this->common_params);
         $sort=$this->tools->argSort($para_filter);
-        $query=$this->tools->createLinkstring($sort);
-        $this->commomParam['sign'] = $this->tools->rsaSign($query, $this->pay_path.$this->ali_pay_private_key_path);
-        $request_url = $this->h5_pay_request_url."?".http_build_query($this->common_params);
+        $preSignStr=$this->tools->createLinkstring($sort);
+        $this->common_params['sign'] = $this->tools->rsaSign($preSignStr, $this->h5_pay_private_key_path);
+        $request_url = $this->h5_pay_request_url."?".$preSignStr."&sign=".urlencode($this->common_params["sign"]);
+        return $request_url;
+
     }
 
 

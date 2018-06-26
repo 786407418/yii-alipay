@@ -7,6 +7,9 @@
  */
 namespace shangxin\yii_alipay\lib;
 class Tools{
+
+    private $fileCharset = "UTF-8";
+
     /**
      * 除去数组中的空值和签名参数,但保留sign_type
      * @param array $para 签名参数组
@@ -14,7 +17,7 @@ class Tools{
      */
     public function paraFilterNew($para) {
         $para_filter = array();
-        while (list ($key, $val) = each ($para)) {
+        while (list ($key, $val) = @each ($para)) {
             if($key == "sign" || $val == "")continue;
             else	$para_filter[$key] = $para[$key];
         }
@@ -28,7 +31,6 @@ class Tools{
      */
     public function argSort($para) {
         ksort($para);
-        reset($para);
         return $para;
     }
 
@@ -43,7 +45,7 @@ class Tools{
             $arg.=$key."=".$val."&";
         }
         //去掉最后一个&字符
-        $arg = substr($arg,0,count($arg)-2);
+        $arg = mb_substr($arg,0,mb_strlen($arg)-2);
 
         //如果存在转义字符，那么去掉转义
         if(get_magic_quotes_gpc()){$arg = stripslashes($arg);}
@@ -59,12 +61,10 @@ class Tools{
      */
     public function rsaSign($data, $private_key_path) {
         $priKey = file_get_contents($private_key_path);
-        $res = openssl_get_privatekey($priKey);
-        openssl_sign($data, $sign, $res);
-        openssl_free_key($res);
-        //base64编码
+        openssl_sign($data, $sign, $priKey);
         $sign = base64_encode($sign);
         return $sign;
     }
+
 
 }
