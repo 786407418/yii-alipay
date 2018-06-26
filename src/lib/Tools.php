@@ -7,7 +7,6 @@
  */
 namespace shangxin\yii_alipay\lib;
 class Tools{
-
     /**
      * 除去数组中的空值和签名参数,但保留sign_type
      * @param array $para 签名参数组

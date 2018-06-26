@@ -3,7 +3,6 @@ namespace shangxin\yii_alipay;
 use shangxin\yii_alipay\lib\Tools;
 use yii\base\Component;
 class Ali extends Component {
-
     /**
      * @var string
      * 支付宝分配给开发者的应用ID
